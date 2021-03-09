@@ -168,7 +168,7 @@ class Transactions(QDialog):
         balance = self.balancefield.text()
         received = self.receivedfield.text()
         isValid = re.match('^[0123]\d/[01][012]/[2][0][2][1]$' , date)
-        if len(balance) > 0 or len(received) > 0:
+        if len(balance) > 0 and len(received) > 0:
             if not isValid:
                 self.reset()
             try:
@@ -181,17 +181,14 @@ class Transactions(QDialog):
             except:
                 print("Somethin Aint Right O.o")
                 self.reset()
-        print("Empty Fields")
-        self.reset()
+        else:
+            self.reset()
         
 
     def gototransactionsview(self):
         transactionsview = TransactionsView()
         widget.addWidget(transactionsview)
         widget.setCurrentIndex(widget.currentIndex() + 1)
-
-    def deletetransactions(self):
-        pass
 
 ###################################################################################################################
 
@@ -215,7 +212,8 @@ class TransactionsView(QDialog):
         db.showTransactionTableValues()
 
     def deletetransactions(self):
-        print("Ill figure it out later -_-")
+        db.wipeTable("Transactions")
+        print("Transaction Table Wiped!")
 
 ###################################################################################################################
 
@@ -286,7 +284,8 @@ class NotesView(QDialog):
         db.showNotesTableValues()
 
     def deletenotes(self):
-        print("Ill figure it out later -_-")
+        db.wipeTable("Notes")
+        print("Notes Table Wiped!")
 
 ###################################################################################################################
 
@@ -320,7 +319,7 @@ class Database():
 
 ##########################################
 
-# Adding and Deleting Fields  
+# Adding Tables  
 
     def addTransactionsTable(self):
         self.getConnection()
@@ -335,7 +334,9 @@ class Database():
 
 
     def addUsersTable(self):
-        pass
+        self.getConnection()
+        self.cursor.execute("CREATE TABLE Users ( EMAIL VARCHAR(30) NOT NULL , PWORD VARCHAR(30) NOT NULL , LOGID INT PRIMARY KEY AUTO_INCREMENT)")
+        self.closeConnection()
 
 ##########################################
 
@@ -365,14 +366,11 @@ class Database():
         self.closeConnection()
 
 
-    def uDel(self):
-        pass
+    def wipeTable(self , table):
+        self.getConnection()
+        self.cursor.execute("TRUNCATE TABLE " + table)
+        self.closeConnection()
 
-    def tDel(self):
-        pass
-
-    def nDel(self):
-        pass
 
 ##########################################
 
@@ -424,17 +422,7 @@ class Database():
             print(f"Date : {d} | Reveived : {r} | Spent : {s} | Balance : {b}")
         self.closeConnection()
 
-
-    def showUserTableValues(self):
-        self.getConnection()
-        self.cursor.execute("SELECT * FROM Users")
-        for x in self.cursor:
-            e = str(x).split('\'')[1]
-            p = str(x).split('\'')[3]
-            print(f"Email : {e} | Password : {p}")
-        self.closeConnection()
-
-
+    
     def showNotesTableValues(self):
         self.getConnection()
         self.cursor.execute("SELECT * FROM Notes")
@@ -446,8 +434,23 @@ class Database():
         self.closeConnection()
 
 
+    def showUserTableValues(self):
+        self.getConnection()
+        self.cursor.execute("SELECT * FROM Users")
+        for x in self.cursor:
+            e = str(x).split('\'')[1]
+            p = str(x).split('\'')[3]
+            print(f"Email : {e} | Password : {p}")
+        self.closeConnection()
+
+
     def getPreviousBal(self):
         self.getConnection()
+        self.cursor.execute("SELECT COUNT(*) FROM Transactions")
+        for x in self.cursor:
+            if x[0] == 0:
+                x = float(0)
+                return x
         self.cursor.execute("SELECT BAL FROM Transactions ORDER BY LOGID DESC LIMIT 1")
         for x in self.cursor:
             x = float(str(x).split('\'')[1])
