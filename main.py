@@ -106,9 +106,6 @@ class CreateAcc(QDialog):
         widget.addWidget(login)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
-    def deleteuser(self):
-        pass
-
 ###################################################################################################################
 
 # Menu
